@@ -1,6 +1,6 @@
 Package: flagme
-Version: 1.16.0
-Date: 2013/03/26
+Version: 1.16.1
+Date: 2013/04/16
 Title: Analysis of Metabolomics GC/MS Data
 Author: Mark Robinson <mrobinson@wehi.edu.au>
 Maintainer: Mark Robinson <mrobinson@wehi.edu.au>
