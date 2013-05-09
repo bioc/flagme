@@ -8,10 +8,10 @@ gatherInfo<-function(pD,obj,newind=NULL,method=c("apex"),findmzind=TRUE,useTIC=F
     rind<-obj@betweenAlignment@runs
     groups<-obj@betweenAlignment@groups
   } else if (is(obj,"progressiveAlignment")) {
-    #n<-length(obj@merges[[1]])
+    n <- length(obj@merges)
     #	cat(n,"\n")
-    pind<-obj@merges[[1]]$ind   # for example, if obj=ma$pas[1]
-    rind<-obj@merges[[1]]$runs
+    pind <- obj@merges[[n]]$ind   # for example, if obj=ma$pas[1]
+    rind <- obj@merges[[n]]$runs
     groups<-rep(names(obj),length(rind))
   }
   out<-matrix(NA,nrow(pind),ncol(pind))
