@@ -1,9 +1,9 @@
 Package: flagme
-Version: 1.20.0
-Date: 2013/04/16
+Version: 1.20.1
+Date: 2014/06/28
 Title: Analysis of Metabolomics GC/MS Data
-Author: Mark Robinson <mrobinson@wehi.edu.au>
-Maintainer: Mark Robinson <mrobinson@wehi.edu.au>
+Author: Mark Robinson <mark.robinson@imls.uzh.ch>
+Maintainer: Mark Robinson <mark.robinson@imls.uzh.ch>, Riccardo Romoli <riccardo.romoli@unifi.it>
 Depends: gcspikelite, xcms
 Imports: gplots, graphics, MASS, methods, SparseM, stats, utils
 Description: Fragment-level analysis of gas chromatography - mass
