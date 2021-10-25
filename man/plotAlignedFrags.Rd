@@ -4,8 +4,14 @@
 \alias{plotAlignedFrags}
 \title{plotAlignedFrags}
 \usage{
-plotAlignedFrags(object, outList, specID, fullRange = TRUE,
-  normalize = TRUE, ...)
+plotAlignedFrags(
+  object,
+  outList,
+  specID,
+  fullRange = TRUE,
+  normalize = TRUE,
+  ...
+)
 }
 \arguments{
 \item{object}{where to keep the mass range of the experiment}
@@ -31,24 +37,27 @@ Plot the deconvoluted and aligned mass spectra collected using gatherInfo()
 }
 \examples{
 
-## Rd workflow
-gcmsPath <- paste(find.package("gcspikelite"), "data", sep = "/")
-cdfFiles <- dir(gcmsPath,"CDF", full = TRUE)
-
-# read data, peak detection results
-pd <- peaksDataset(cdfFiles[1:4], mz = seq(50,550), rtrange = c(7.5,10.5))
-pd <- addXCMSPeaks(files = cdfFiles[1:4], object = pd, peakPicking = c('mF'),
-                   snthresh = 2, fwhm = 8,  step = 0.5, steps = 2, mzdiff = 0.5,
-                   sleep = 0)
+files <- list.files(path = paste(find.package("gcspikelite"), "data",
+                    sep = "/"),"CDF", full = TRUE)
+data <- peaksDataset(files[1:4], mz = seq(50, 550), rtrange = c(7.5, 8.5))
+## create settings object
+mfp <- xcms::MatchedFilterParam(fwhm = 10, snthresh = 5)
+cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
+ prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
+ extendLengthMSW = TRUE, mzCenterFun = "wMean")
+data <- addXCMSPeaks(files[1:4], data, settings = mfp, minintens = 100,
+ multipleMatchedFilter = FALSE, multipleMatchedFilterParam =
+ list(fwhm = c(5, 10, 20), rt_abs = 3, mz_abs = 0.1))
+data
 ## multiple alignment
-ma <- multipleAlignment(pd, c(1,1,2,2), wn.gap = 0.5, wn.D = 0.05, bw.gap = 0.6, 
-                        bw.D = 0.2, usePeaks = TRUE, filterMin = 1, df = 50,
-                        verbose = TRUE, metric = 2, type = 2)
+ma <- multipleAlignment(data, c(1,1,2,2), wn.gap = 0.5, wn.D = 0.05, 
+ bw.gap = 0.6, bw.D = 0.2, usePeaks = TRUE, filterMin = 1, df = 50,
+ verbose = TRUE, metric = 2, type = 2)
 
 ## gather apex intensities
-gip <- gatherInfo(pd, ma)
+gip <- gatherInfo(data, ma)
 gip[[33]]
-plotAlignedFrags(object = pd, outList = gip, specID = 33)
+plotAlignedFrags(object = data, outList = gip, specID = 33)
 
 }
 \author{

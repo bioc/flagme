@@ -29,22 +29,27 @@ Plot the deconvoluted mass spectra from the profile matrix
 }
 \examples{
 
-gcmsPath <- paste(find.package("gcspikelite"), "data", sep="/")
-cdfFiles <- dir(gcmsPath,"CDF", full=TRUE)
-# read data, peak detection results
-pd <- peaksDataset(cdfFiles[1:3], mz=seq(50,550), rtrange=c(7.5,10.5))
-pd <- addXCMSPeaks(files=cdfFiles[1:3], object=pd, peakPicking=c('mF'),
-                   snthresh=3, fwhm=10,  step=0.1, steps=2, mzdiff=0.5,
-                   sleep=0)
+files <- list.files(path = paste(find.package("gcspikelite"), "data",
+                    sep = "/"),"CDF", full = TRUE)
+data <- peaksDataset(files[1:2], mz = seq(50, 550), rtrange = c(7.5, 8.5))
+## create settings object
+mfp <- xcms::MatchedFilterParam(fwhm = 10, snthresh = 5)
+cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
+ prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
+ extendLengthMSW = TRUE, mzCenterFun = "wMean")
+data <- addXCMSPeaks(files[1:2], data, settings = mfp, minintens = 100,
+ multipleMatchedFilter = FALSE, multipleMatchedFilterParam =
+ list(fwhm = c(5, 10, 20), rt_abs = 3, mz_abs = 0.1))
+data
 ## align two chromatogram
-pA <- peaksAlignment(pd@peaksdata[[1]], pd@peaksdata[[2]],
-                     pd@peaksrt[[1]], pd@peaksrt[[2]], D=50,
-                     metric=3, compress=FALSE, type=2, penality=0.2)
+pA <- peaksAlignment(data@peaksdata[[1]], data@peaksdata[[2]],
+                     data@peaksrt[[1]], data@peaksrt[[2]], D = 50,
+                     metric = 3, compress = FALSE, type = 2, penality = 0.2)
 pA@v$match
 ## plot the mass spectra
 par(mfrow=c(2,1))
-plotFrags(object=pd, sample=1, specID=10)
-plotFrags(object=pd, sample=2, specID=12)
+plotFrags(object=data, sample=1, specID=10)
+plotFrags(object=data, sample=2, specID=12)
 
 }
 \author{

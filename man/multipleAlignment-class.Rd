@@ -8,10 +8,25 @@
 \alias{multipleAlignment-method}
 \title{Data Structure for multiple alignment of many GCMS samples}
 \usage{
-multipleAlignment(pd, group, bw.gap = 0.8, wn.gap = 0.6, bw.D = 0.2,
-  wn.D = 0.05, filterMin = 1, lite = FALSE, usePeaks = TRUE,
-  df = 50, verbose = TRUE, timeAdjust = FALSE, doImpute = FALSE,
-  metric = 2, type = 2, penality = 0.2, compress = FALSE)
+multipleAlignment(
+  pd,
+  group,
+  bw.gap = 0.8,
+  wn.gap = 0.6,
+  bw.D = 0.2,
+  wn.D = 0.05,
+  filterMin = 1,
+  lite = FALSE,
+  usePeaks = TRUE,
+  df = 50,
+  verbose = TRUE,
+  timeAdjust = FALSE,
+  doImpute = FALSE,
+  metric = 2,
+  type = 2,
+  penality = 0.2,
+  compress = FALSE
+)
 }
 \arguments{
 \item{pd}{a \code{peaksDataset} object}

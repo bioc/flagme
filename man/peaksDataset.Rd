@@ -10,8 +10,13 @@
 \alias{plot,peaksDataset,ANY-method}
 \title{Data Structure for raw GCMS data and peak detection results}
 \usage{
-peaksDataset(fns = dir(, "[Cc][Dd][Ff]"), verbose = TRUE,
-  mz = seq(50, 550), rtDivide = 60, rtrange = NULL)
+peaksDataset(
+  fns = dir(, "[Cc][Dd][Ff]"),
+  verbose = TRUE,
+  mz = seq(50, 550),
+  rtDivide = 60,
+  rtrange = NULL
+)
 }
 \arguments{
 \item{fns}{character vector, filenames of raw data in CDF format.}

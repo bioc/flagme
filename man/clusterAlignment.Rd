@@ -10,8 +10,14 @@
 \alias{plot,clusterAlignment,ANY-method}
 \title{Data Structure for a collection of all pairwise alignments of GCMS runs}
 \usage{
-clusterAlignment(pD, runs = 1:length(pD@rawdata), timedf = NULL,
-  usePeaks = TRUE, verbose = TRUE, ...)
+clusterAlignment(
+  pD,
+  runs = 1:length(pD@rawdata),
+  timedf = NULL,
+  usePeaks = TRUE,
+  verbose = TRUE,
+  ...
+)
 }
 \arguments{
 \item{pD}{a \code{peaksDataset} object.}

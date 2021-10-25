@@ -16,53 +16,52 @@
 #' @author riccardo.romoli@@unifi.it
 #' @examples
 #' 
-#' gcmsPath <- paste(find.package("gcspikelite"), "data", sep="/")
-#' cdfFiles <- dir(gcmsPath,"CDF", full=TRUE)
-#' # read data, peak detection results
-#' pd <- peaksDataset(cdfFiles[1:3], mz=seq(50,550), rtrange=c(7.5,10.5))
-#' pd <- addXCMSPeaks(files=cdfFiles[1:3], object=pd, peakPicking=c('mF'),
-#'                    snthresh=3, fwhm=10,  step=0.1, steps=2, mzdiff=0.5,
-#'                    sleep=0)
+#' files <- list.files(path = paste(find.package("gcspikelite"), "data",
+#'                     sep = "/"),"CDF", full = TRUE)
+#' data <- peaksDataset(files[1:2], mz = seq(50, 550), rtrange = c(7.5, 8.5))
+#' ## create settings object
+#' mfp <- xcms::MatchedFilterParam(fwhm = 10, snthresh = 5)
+#' cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
+#'  prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
+#'  extendLengthMSW = TRUE, mzCenterFun = "wMean")
+#' data <- addXCMSPeaks(files[1:2], data, settings = mfp, minintens = 100,
+#'  multipleMatchedFilter = FALSE, multipleMatchedFilterParam =
+#'  list(fwhm = c(5, 10, 20), rt_abs = 3, mz_abs = 0.1))
+#' data
 #' ## align two chromatogram
-#' pA <- peaksAlignment(pd@peaksdata[[1]], pd@peaksdata[[2]],
-#'                      pd@peaksrt[[1]], pd@peaksrt[[2]], D=50,
-#'                      metric=3, compress=FALSE, type=2, penality=0.2)
+#' pA <- peaksAlignment(data@peaksdata[[1]], data@peaksdata[[2]],
+#'                      data@peaksrt[[1]], data@peaksrt[[2]], D = 50,
+#'                      metric = 3, compress = FALSE, type = 2, penality = 0.2)
 #' pA@v$match
 #' ## plot the mass spectra
 #' par(mfrow=c(2,1))
-#' plotFrags(object=pd, sample=1, specID=10)
-#' plotFrags(object=pd, sample=2, specID=12)
+#' plotFrags(object=data, sample=1, specID=10)
+#' plotFrags(object=data, sample=2, specID=12)
 #' 
 #' @export plotFrags
-plotFrags <- function(object, sample, specID, normalize = TRUE, ...){
+plotFrags <- function(object, sample, specID, normalize = TRUE, ...) {
     sp <- as.numeric(specID)
-    ## sample <- object@files[sample]
-    ## i <- grep(pattern = sample, object@files)
-    if(length(sp) > 0){
-        y <- object@peaksdata[[sample]][,sp]        
-        if(normalize){
-            y <- sapply(y, function(x){
+    if (length(sp) > 0) {
+        y <- object@peaksdata[[sample]][, sp]
+        if (normalize) {
+            y <- sapply(y, function(x) {
                 i <- which.max(y)
-                (100*x)/y[i]}
-                )}   
-        plot(y,
-             type = 'h',
-             main = paste('Sample', names(object@peaksdata[sample]), 'RT', object@peaksrt[[sample]][sp], 'min'),
-             xlab = 'm/z',
+                (100 * x) / y[i]}
+                )
+                }
+        plot(y, type = "h", main = paste("Sample",
+            names(object@peaksdata[sample]), "RT",
+            object@peaksrt[[sample]][sp], "min"), xlab = "m/z",
              ylab =
-                 if(normalize)
-                 {
-                     'Rel. Abundance'
-                 }
-                 else
-                 {
-                     'Abs. Abundance'
+                 if (normalize) {
+                     "Rel. Abundance"
+                 } else {
+                     "Abs. Abundance"
                  }, ...)
-    }
-    else
-    {
-        stop(paste('The spectrum is not present in the sample', object@files[sample], '\n'))
-    }
+        } else {
+        stop(paste("The spectrum is not present in the sample",
+        object@files[sample], '\n'))
+        }
 }
 
 
@@ -89,41 +88,42 @@ plotFrags <- function(object, sample, specID, normalize = TRUE, ...){
 #' @keywords gatherInfo() plot()
 #' @examples
 #' 
-#' ## Rd workflow
-#' gcmsPath <- paste(find.package("gcspikelite"), "data", sep = "/")
-#' cdfFiles <- dir(gcmsPath,"CDF", full = TRUE)
-#' 
-#' # read data, peak detection results
-#' pd <- peaksDataset(cdfFiles[1:4], mz = seq(50,550), rtrange = c(7.5,10.5))
-#' pd <- addXCMSPeaks(files = cdfFiles[1:4], object = pd, peakPicking = c('mF'),
-#'                    snthresh = 2, fwhm = 8,  step = 0.5, steps = 2, mzdiff = 0.5,
-#'                    sleep = 0)
+#' files <- list.files(path = paste(find.package("gcspikelite"), "data",
+#'                     sep = "/"),"CDF", full = TRUE)
+#' data <- peaksDataset(files[1:4], mz = seq(50, 550), rtrange = c(7.5, 8.5))
+#' ## create settings object
+#' mfp <- xcms::MatchedFilterParam(fwhm = 10, snthresh = 5)
+#' cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
+#'  prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
+#'  extendLengthMSW = TRUE, mzCenterFun = "wMean")
+#' data <- addXCMSPeaks(files[1:4], data, settings = mfp, minintens = 100,
+#'  multipleMatchedFilter = FALSE, multipleMatchedFilterParam =
+#'  list(fwhm = c(5, 10, 20), rt_abs = 3, mz_abs = 0.1))
+#' data
 #' ## multiple alignment
-#' ma <- multipleAlignment(pd, c(1,1,2,2), wn.gap = 0.5, wn.D = 0.05, bw.gap = 0.6, 
-#'                         bw.D = 0.2, usePeaks = TRUE, filterMin = 1, df = 50,
-#'                         verbose = TRUE, metric = 2, type = 2)
+#' ma <- multipleAlignment(data, c(1,1,2,2), wn.gap = 0.5, wn.D = 0.05, 
+#'  bw.gap = 0.6, bw.D = 0.2, usePeaks = TRUE, filterMin = 1, df = 50,
+#'  verbose = TRUE, metric = 2, type = 2)
 #' 
 #' ## gather apex intensities
-#' gip <- gatherInfo(pd, ma)
+#' gip <- gatherInfo(data, ma)
 #' gip[[33]]
-#' plotAlignedFrags(object = pd, outList = gip, specID = 33)
+#' plotAlignedFrags(object = data, outList = gip, specID = 33)
 #' 
 #' @export plotAlignedFrags
-plotAlignedFrags <- function(object, outList, specID, fullRange = TRUE, normalize = TRUE, ...)
-{
-specID <- as.numeric(specID)
-mz <- outList[[specID]]$mz
-abundance <- outList[[specID]]$data
-
-if(normalize)
-{
-    for(i in 1:ncol(abundance))
-    {
-        if(is.na(sum(abundance[,i])))
-            next
-        abundance[,i] <- 100 * abundance[,i] / abundance[which.max(abundance[,i]), i]
-    }
-}   
+plotAlignedFrags <- function(object, outList, specID, fullRange = TRUE, 
+    normalize = TRUE, ...) {
+        specID <- as.numeric(specID)
+        mz <- outList[[specID]]$mz
+        abundance <- outList[[specID]]$data
+        if (normalize) {
+            for(i in 1:ncol(abundance)) {
+                if(is.na(sum(abundance[,i])))
+                next
+                abundance[,i] <- 100 * abundance[,i] / 
+                    abundance[which.max(abundance[,i]), i]
+                }
+            }
 
 ## set the plot grid
 specnum <- table(apply(abundance, 2, sum)) # count number of massSpec different from NA

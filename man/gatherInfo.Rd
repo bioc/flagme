@@ -4,9 +4,16 @@
 \alias{gatherInfo}
 \title{Gathers abundance informations from an alignment}
 \usage{
-gatherInfo(pD, obj, newind = NULL, method = c("apex"),
-  findmzind = TRUE, useTIC = FALSE, top = NULL,
-  intensity.cut = 0.05)
+gatherInfo(
+  pD,
+  obj,
+  newind = NULL,
+  method = c("apex"),
+  findmzind = TRUE,
+  useTIC = FALSE,
+  top = NULL,
+  intensity.cut = 0.05
+)
 }
 \arguments{
 \item{pD}{a \code{peaksDataset} object, to get the abundance data from}

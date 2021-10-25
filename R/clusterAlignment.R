@@ -66,13 +66,13 @@ setMethod("decompress","clusterAlignment",
 #' @export clusterAlignment
 clusterAlignment <- function(pD, runs = 1:length(pD@rawdata),
                              timedf = NULL, usePeaks = TRUE, 
-                             verbose = TRUE, ...){
+                             verbose = TRUE, ...) {
     n <- length(runs)
-    if(usePeaks)
+    if (usePeaks)
         nr <- length(pD@peaksdata)
     else
         nr <- length(pD@rawdata)
-    alignments <- vector("list", n*(n-1)/2)
+    alignments <- vector("list", n * (n - 1) / 2)
     aligned <- matrix(-1, nr, nr)
     colnames(aligned) <- names(pD@rawdata)
     rownames(aligned) <- names(pD@rawdata)
@@ -80,48 +80,43 @@ clusterAlignment <- function(pD, runs = 1:length(pD@rawdata),
     colnames(dist) <- names(pD@rawdata)[runs]
     rownames(dist) <- names(pD@rawdata)[runs]
     count <- 0
-    for(i in 1:(n-1))
-    {
+    for (i in 1:( n - 1)) {
         run.i <- runs[i]
-        for(j in (i+1):n)
-        {
+        for (j in (i + 1):n) {
             run.j <- runs[j]
-            count <- count+1
-            if(verbose)
-            {
+            count <- count + 1
+            if(verbose) {
                 cat("[clusterAlignment] Aligning",
                     names(pD@rawdata)[run.i], "to",
                     names(pD@rawdata)[run.j], "\n")
             }
-            if(usePeaks)
-            {
-              alignments[[count]] <- 
-                peaksAlignment(pD@peaksdata[[run.i]], 
-                               pD@peaksdata[[run.j]], 
-                               pD@peaksrt[[run.i]], 
-                               pD@peaksrt[[run.j]], 
-                               usePeaks = usePeaks, 
-                               timedf = timedf[[count]], 
+            if (usePeaks) {
+              alignments[[count]] <-
+                peaksAlignment(pD@peaksdata[[run.i]],
+                               pD@peaksdata[[run.j]],
+                               pD@peaksrt[[run.i]],
+                               pD@peaksrt[[run.j]],
+                               usePeaks = usePeaks,
+                               timedf = timedf[[count]],
                                verbose = verbose, ...)
-            }
-            else
-            {
+            } else {
                 alignments[[count]] <-
                     peaksAlignment(pD@rawdata[[run.i]],
                                    pD@rawdata[[run.j]],
                                    pD@rawrt[[run.i]],
                                    pD@rawrt[[run.j]],
-                                   usePeaks=usePeaks, timedf=NULL,
-                                   verbose=verbose, ...)
+                                   usePeaks = usePeaks, timedf = NULL,
+                                   verbose = verbose, ...)
             }
-            aligned[runs[i],runs[j]] <- aligned[runs[j],runs[i]] <- count
-            dist[j,i] <- dist[i,j] <- alignments[[count]]@dist
-	}
-    }
+            aligned[runs[i], runs[j]] <- aligned[runs[j], runs[i]] <- count
+            dist[j, i] <- dist[i, j] <- alignments[[count]]@dist
+          }
+  }
     merge <- hclust(as.dist(dist), method = "average")$merge
     merge.copy <- merge
-    for(i in 1:length(runs))
-        {merge[which(merge.copy == (-i))] <- (-runs[i])}
+    for (i in 1:length(runs)) {
+      merge[which(merge.copy == (-i))] <- (-runs[i])
+      }
     new("clusterAlignment", runs = runs, aligned = aligned,
         gap = alignments[[1]]@gap, D = alignments[[1]]@D, dist = dist,
         alignments = alignments, merge = merge)
@@ -170,38 +165,36 @@ function(object) {
 ##' @keywords classes
 ##' @examples
 ##' 
-##' require(gcspikelite)
-##' 
-##' ## paths and files
-##' gcmsPath <- paste(find.package("gcspikelite"), "data", sep="/")
-##' cdfFiles <- dir(gcmsPath, "CDF", full=TRUE)
-##' eluFiles <- dir(gcmsPath, "ELU", full=TRUE)
-##' 
-##' ## read data
-##' pd <- peaksDataset(cdfFiles[1:3], mz=seq(50,550), rtrange=c(7.5,8.5))
-##' pd <- addXCMSPeaks(files=cdfFiles[1:3], object=pd, peakPicking=c('mF'),
-##'                    snthresh=3, fwhm=10,  step=0.1, steps=2, mzdiff=0.5)
-##' ca <- clusterAlignment(pd, metric = 1, D = 50, type = 1, gap = 0.5)
+#' require(gcspikelite)
+#' 
+#' # paths and files
+#' gcmsPath <- paste(find.package("gcspikelite"), "data", sep="/")
+#' cdfFiles <- dir(gcmsPath, "CDF", full=TRUE)
+#' eluFiles <- dir(gcmsPath, "ELU", full=TRUE)
+#' 
+#' # read data, peak detection results
+#' pd <- peaksDataset(cdfFiles[1:2], mz=seq(50,550), rtrange=c(7.5,8.5))
+#' pd <- addAMDISPeaks(pd, eluFiles[1:2])
+#' 
+#' ca <- clusterAlignment(pd, gap=0.5, D=0.05, df=30, metric=1, type=1)
 ##' plotClustAlignment(ca, run = 1)
 ##' plotClustAlignment(ca, run = 2)
-##' plotClustAlignment(ca, run = 3) 
+##' plotClustAlignment(ca, run = 3)
 ##' 
 ##' @importFrom graphics plot
 ##' @export
 setMethod("plotClustAlignment", "clusterAlignment",
-          function(object, alignment = 1, ...)
-          {
+          function(object, alignment = 1, ...) {
               rn <- rownames(object@aligned)
-              for(i in alignment){
-                  ind <- which(object@aligned == i, arr.ind = TRUE)[2,]
+              for (i in alignment) {
+                  ind <- which(object@aligned == i, arr.ind = TRUE)[2, ]
                   plot(## object@alignments[[i]],
                       object@alignments[[i]]@v$match,
                       main = paste("D=", object@D, " gap=", object@gap,
                                    sep = ""),
-                      xlab = paste("Peaks ",rn[ind[1]], sep = " - "),
-                      ylab = paste("Peaks ",rn[ind[2]], sep = " - "),
+                      xlab = paste("Peaks ", rn[ind[1]], sep = " - "),
+                      ylab = paste("Peaks ", rn[ind[2]], sep = " - "),
                       ...)
               }
           }
           )
-

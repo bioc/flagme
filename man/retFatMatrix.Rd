@@ -31,19 +31,22 @@ different peaks.
 \examples{
 
 require(gcspikelite)
-# paths and files
-gcmsPath <- paste(find.package("gcspikelite"), "data", sep = "/")
-cdfFiles <- dir(gcmsPath,"CDF",full=TRUE)
-# read data, peak detection results
-pd <- peaksDataset(cdfFiles[1:2], mz=seq(50,550),
-                   rtrange=c(7.5,8.5))
-pd <- addXCMSPeaks(files=cdfFiles[1:2], object=pd,
-                   peakPicking=c('mF'), snthresh=3, fwhm=4,
-                   step=1, steps=2, mzdiff=0.5)
-ma <- multipleAlignment(pd = pd, group = c(1,1),
+files <- list.files(path = paste(find.package("gcspikelite"), "data",
+                    sep = "/"),"CDF", full = TRUE)
+data <- peaksDataset(files[1:2], mz = seq(50, 550), rtrange = c(7.5, 8.5))
+## create settings object
+mfp <- xcms::MatchedFilterParam(fwhm = 10, snthresh = 5)
+cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
+ prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
+ extendLengthMSW = TRUE, mzCenterFun = "wMean")
+data <- addXCMSPeaks(files[1:2], data, settings = mfp, minintens = 100,
+ multipleMatchedFilter = FALSE, multipleMatchedFilterParam =
+ list(fwhm = c(5, 10, 20), rt_abs = 3, mz_abs = 0.1))
+data
+ma <- multipleAlignment(pd = data, group = c(1,1),
                         filterMin = 1, metric = 2, type = 2)
-outList <- gatherInfo(pd, ma)
-mtxD <- retFatMatrix(object = pd, data = outList, minFilter = 1)
+outList <- gatherInfo(data, ma)
+mtxD <- retFatMatrix(object = data, data = outList, minFilter = 1)
 
 }
 \seealso{

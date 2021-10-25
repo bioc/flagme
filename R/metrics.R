@@ -118,7 +118,7 @@ normDotProduct <- function (x1, x2, t1=NULL, t2=NULL, df=max(ncol(x1), ncol(x2))
 #' Retention Time Penalized Normalized Dot Product
 #' 
 #' This function calculates the similarity of all pairs of peaks from 2
-#' samples, using the spectra similarity and the rretention time differencies
+#' samples, using the spectra similarity and the retention time differencies
 #' 
 #' Computes the normalized dot product between every pair of peak vectors in
 #' the retention time window (\code{D})and returns a similarity matrix.
@@ -136,65 +136,64 @@ normDotProduct <- function (x1, x2, t1=NULL, t2=NULL, df=max(ncol(x1), ncol(x2))
 #' 
 #' ## Not Run
 #' require(gcspikelite)
-#' gcmsPath <- paste(find.package("gcspikelite"), "data", sep="/")
-#' cdfFiles <- dir(gcmsPath,"CDF", full=TRUE)
-#' 
-#'                                         # read data, peak detection results
-#' pd <- peaksDataset(cdfFiles[1:3], mz=seq(50,550), rtrange=c(7.5,10.5))
-#' pd <- addXCMSPeaks(files=cdfFiles[1:3], object=pd, peakPicking=c('mF'),
-#'                    snthresh=3, fwhm=10,  step=0.1, steps=2, mzdiff=0.5,
-#'                    sleep=0)
+#' files <- list.files(path = paste(find.package("gcspikelite"), "data",
+#'                     sep = "/"),"CDF", full = TRUE)
+#' data <- peaksDataset(files[1:2], mz = seq(50, 550), rtrange = c(7.5, 8.5))
+#' ## create settings object
+#' mfp <- xcms::MatchedFilterParam(fwhm = 10, snthresh = 5)
+#' cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
+#'  prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
+#'  extendLengthMSW = TRUE, mzCenterFun = "wMean")
+#' data <- addXCMSPeaks(files[1:2], data, settings = mfp, minintens = 100,
+#'  multipleMatchedFilter = FALSE, multipleMatchedFilterParam =
+#'  list(fwhm = c(5, 10, 20), rt_abs = 3, mz_abs = 0.1))
+#' data
 #' ## review peak picking
-#' plotChrom(pd, rtrange=c(7.5, 10.5), runs=c(1:3))
+#' plotChrom(data, rtrange = c(7.5, 10.5), runs = c(1:2))
 #' 
-#' r <- ndpRT(pd@peaksdata[[1]], pd@peaksdata[[2]],
-#'            pd@peaksrt[[1]], pd@peaksrt[[2]], D=50)
+#' r <- ndpRT(data@peaksdata[[1]], data@peaksdata[[2]],
+#'            data@peaksrt[[1]], data@peaksrt[[2]], D = 50)
 #' ## End (Not Run)
 #' 
 #' @export ndpRT
-ndpRT <- function(s1, s2, t1, t2, D){
-    
+ndpRT <- function(s1, s2, t1, t2, D) {
     Normalize <- function(j){
-        n <- apply(j, 2, function(k){
+        n <- apply(j, 2, function(k) {
             m <- k[which.max(k)]
-            norm <- k/m*100
+            norm <- k / m * 100
         })
         return(n)
     }
-    
-    scoring <- function(s1, s2, t1, t2, D){
-        angle <- function(s1, s2){
-            theta <- acos(sum(s1*s2) / (sqrt(sum(s1 * s1)) * sqrt(sum(s2 * s2))))
-            theta <- 1-theta
-            if(theta < 0)
-            {
+    scoring <- function(s1, s2, t1, t2, D) {
+        angle <- function(s1, s2) {
+            theta <- acos(
+                sum(s1 * s2) / (sqrt(sum(s1 * s1)) * sqrt(sum(s2 * s2)))
+                )
+            theta <- 1 - theta
+            if(theta < 0) {
                 theta <- 0
-            }       
-            return(theta) 
+            }
+            return(theta)
         }
-        
-        rtPen <- function(t1, t2, D){
+        rtPen <- function(t1, t2, D) {
             ## D espresso in secondi
-            t1 <- t1/60 # trasformo in secondi
-            t2 <- t2/60 # trasformo in secondi
-            srt <- exp(-(((t1-t2)^2) / D^2)) # da articolo MR, modificato
+            t1 <- t1 / 60 # trasformo in secondi
+            t2 <- t2 / 60 # trasformo in secondi
+            srt <- exp(- (((t1 - t2)^2) / D^2)) # da articolo MR, modificato
             # era 2*D^2
             return(srt)
         }
-        
         score <- angle(s1, s2) * rtPen(t1, t2, D)
         return(score)
     }
-    
     s1 <- Normalize(s1)
     s2 <- Normalize(s2)
-    
-    res <- matrix(0, nrow=ncol(s1), ncol=ncol(s2))
-    for(i in 1:ncol(s1)){
-        for(j in 1:ncol(s2)){
-            res[i,j] <- scoring(s1[,i], s2[,j], t1[i], t2[j], D=D)
+    res <- matrix(0, nrow = ncol(s1), ncol = ncol(s2))
+    for (i in 1:ncol(s1)) {
+        for (j in 1:ncol(s2)) {
+            res[i, j] <- scoring(s1[, i], s2[, j], t1[i], t2[j], D = D)
         }
-    }    
+    }
     return(res)
 }
 
@@ -226,55 +225,58 @@ ndpRT <- function(s1, s2, t1, t2, D){
 #' 
 #' ## Not Run
 #' require(gcspikelite)
-#' gcmsPath <- paste(find.package("gcspikelite"), "data", sep="/")
-#' cdfFiles <- dir(gcmsPath,"CDF", full=TRUE)
-#' ## read data, peak detection results
-#' pd <- peaksDataset(cdfFiles[1:3], mz=seq(50,550), rtrange=c(7.5,10.5))
-#' pd <- addXCMSPeaks(files=cdfFiles[1:3], object=pd, peakPicking=c('mF'),
-#'                    snthresh=3, fwhm=10,  step=0.1, steps=2, mzdiff=0.5,
-#'                    sleep=0)
+#' files <- list.files(path = paste(find.package("gcspikelite"), "data",
+#'                     sep = "/"),"CDF", full = TRUE)
+#' data <- peaksDataset(files[1:2], mz = seq(50, 550), rtrange = c(7.5, 8.5))
+#' ## create settings object
+#' mfp <- xcms::MatchedFilterParam(fwhm = 10, snthresh = 5)
+#' cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
+#'  prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
+#'  extendLengthMSW = TRUE, mzCenterFun = "wMean")
+#' data <- addXCMSPeaks(files[1:2], data, settings = mfp, minintens = 100,
+#'  multipleMatchedFilter = FALSE, multipleMatchedFilterParam =
+#'  list(fwhm = c(5, 10, 20), rt_abs = 3, mz_abs = 0.1))
+#' data
 #' ## review peak picking
-#' plotChrom(pd, rtrange=c(7.5, 10.5), runs=c(1:3))
+#' plotChrom(data, rtrange=c(7.5, 10.5), runs=c(1:2))
 #' 
-#' r <- corPrt(pd@peaksdata[[1]], pd@peaksdata[[2]],
-#'            pd@peaksrt[[1]], pd@peaksrt[[2]], D=50, penality=0.2)
+#' r <- corPrt(data@peaksdata[[1]], data@peaksdata[[2]],
+#'            data@peaksrt[[1]], data@peaksrt[[2]], D = 50, penality = 0.2)
 #' ## End (Not Run)
 #'
 #' @importFrom stats complete.cases
 #' @export corPrt
-corPrt <- function(d1, d2, t1, t2, D, penality=0.2){
+corPrt <- function(d1, d2, t1, t2, D, penality = 0.2) {
     D <- as.numeric(D) # time window in second
     pn <- as.numeric(penality)# penality if out of time window
-    pearson <- function(x,y){
+    pearson <- function(x,y) {
         size <- length(x)
-        cfun <- .C("pearson", size=as.integer(size), x=as.double(x),
-                   y=as.double(y), result=double(1), PACKAGE='flagme')
+        cfun <- .C("pearson", size = as.integer(size), x = as.double(x),
+                   y = as.double(y), result = double(1), PACKAGE = 'flagme')
         return(cfun[["result"]])
     }
-    Normalize <- function(j){
-        n <- apply(j, 2, function(k){
+    Normalize <- function(j) {
+        n <- apply(j, 2, function(k) {
             m <- k[which.max(k)]
-            norm <- k/m*100
+            norm <- k / m * 100
         })
     }
     Rank <- function(u) {
-        if (length(u) == 0L) 
+        if (length(u) == 0L)
             u
         else if (is.matrix(u)) {
-            if (nrow(u) > 1L) 
-                apply(u, 2L, rank, na.last="keep")
+            if (nrow(u) > 1L)
+                apply(u, 2L, rank, na.last = "keep")
             else row(u)
         }
-        else rank(u, na.last="keep")
+        else rank(u, na.last = "keep")
     }
-    #
         x <- Normalize(d1)
         y <- Normalize(d2)
-    
     ## method <- c("pearson", "kendall", "spearman")
     ncx <- ncol(x)
     ncy <- ncol(y)
-    r <- matrix(0, nrow=ncx, ncol=ncy)
+    r <- matrix(0, nrow = ncx, ncol = ncy)
     for (i in seq_len(ncx)) {
         for (j in seq_len(ncy)) {
             x2 <- x[, i]
@@ -283,24 +285,20 @@ corPrt <- function(d1, d2, t1, t2, D, penality=0.2){
             x2 <- rank(x2[ok])
             y2 <- rank(y2[ok])
             ## insert rt penality in seconds
-            rtDiff <- t1[i]*60 - t2[j]*60 # retention time in seconds
+            rtDiff <- t1[i] * 60 - t2[j] * 60 # retention time in seconds
             rtDiff <- abs(rtDiff)
             r[i, j] <- if (any(ok))
-                           if(rtDiff <= D)
+                           if (rtDiff <= D)
                                pearson(x2, y2)
                            else 
                                pearson(x2, y2) - pn
                        else 0
         }
     }
-    
-    r <- apply(r, MARGIN=c(1,2), function(x){
-        if(x < 0.2)
-        {
+    r <- apply(r, MARGIN = c(1, 2), function(x) {
+        if (x < 0.2) {
             x <- 0
-        }
-        else
-        {
+        } else {
             x <- x
         }
     })
