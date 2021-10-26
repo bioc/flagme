@@ -16,7 +16,7 @@
 
 \begin{document}
 
-%\VignetteIndexEntry{\texttt{flagme}: Fragment-level analysis of \\ GC-MS-based metabolomics data}
+%\VignetteIndexEntry{Using flagme -- Fragment-level analysis of GC-MS-based metabolomics data}
 
 \title{\texttt{flagme}: Fragment-level analysis of \\ GC-MS-based 
   metabolomics data}

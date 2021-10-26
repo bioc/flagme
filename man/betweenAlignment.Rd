@@ -8,9 +8,22 @@
 \alias{betweenAlignment-method}
 \title{Data Structure for "between" alignment of many GCMS samples}
 \usage{
-betweenAlignment(pD, cAList, pAList, impList, filterMin = 1, gap = 0.7,
-  D = 10, usePeaks = TRUE, df = 30, verbose = TRUE, metric = 2,
-  type = 2, penality = 0.2, compress = FALSE)
+betweenAlignment(
+  pD,
+  cAList,
+  pAList,
+  impList,
+  filterMin = 1,
+  gap = 0.7,
+  D = 10,
+  usePeaks = TRUE,
+  df = 30,
+  verbose = TRUE,
+  metric = 2,
+  type = 2,
+  penality = 0.2,
+  compress = FALSE
+)
 }
 \arguments{
 \item{pD}{a \code{peaksDataset} object}

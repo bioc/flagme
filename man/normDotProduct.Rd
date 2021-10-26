@@ -4,8 +4,16 @@
 \alias{normDotProduct}
 \title{Normalized Dot Product}
 \usage{
-normDotProduct(x1, x2, t1 = NULL, t2 = NULL, df = max(ncol(x1),
-  ncol(x2)), D = 1e+05, timedf = NULL, verbose = FALSE)
+normDotProduct(
+  x1,
+  x2,
+  t1 = NULL,
+  t2 = NULL,
+  df = max(ncol(x1), ncol(x2)),
+  D = 1e+05,
+  timedf = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{x1}{data matrix for sample 1}

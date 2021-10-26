@@ -4,8 +4,7 @@
 \alias{imputePeaks}
 \title{Imputatin of locations of peaks that were undetected}
 \usage{
-imputePeaks(pD, obj, typ = 1, obj2 = NULL, filterMin = 1,
-  verbose = TRUE)
+imputePeaks(pD, obj, typ = 1, obj2 = NULL, filterMin = 1, verbose = TRUE)
 }
 \arguments{
 \item{pD}{a \code{peaksDataset} object}

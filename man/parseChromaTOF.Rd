@@ -4,8 +4,15 @@
 \alias{parseChromaTOF}
 \title{Parser for ChromaTOF files}
 \usage{
-parseChromaTOF(fn, min.pc = 0.01, mz = seq(85, 500), rt.cut = 0.008,
-  rtrange = NULL, skip = 1, rtDivide = 60)
+parseChromaTOF(
+  fn,
+  min.pc = 0.01,
+  mz = seq(85, 500),
+  rt.cut = 0.008,
+  rtrange = NULL,
+  skip = 1,
+  rtDivide = 60
+)
 }
 \arguments{
 \item{fn}{ChromaTOF filename to read.}

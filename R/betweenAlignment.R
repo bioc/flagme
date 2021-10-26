@@ -176,10 +176,11 @@ betweenAlignment <- function(pD, cAList, pAList, impList, filterMin = 1,
 #' @export
 #' @noRd
 setMethod("show","betweenAlignment",
-          function(object){
+          function(object) {
               cat("An object of class \"", class(object), "\"\n", sep = "")
               cat(length(object@mergedPeaksDataset@peaksrt), "groups:",
-                  sapply(object@mergedPeaksDataset@peaksrt, length), "merged peaks\n"
+                  sapply(object@mergedPeaksDataset@peaksrt, length),
+                  "merged peaks\n"
                   )
           }
           )

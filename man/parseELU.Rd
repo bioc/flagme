@@ -4,8 +4,7 @@
 \alias{parseELU}
 \title{Parser for ELU files}
 \usage{
-parseELU(f, min.pc = 0.01, mz = seq(50, 550), rt.cut = 0.008,
-  rtrange = NULL)
+parseELU(f, min.pc = 0.01, mz = seq(50, 550), rt.cut = 0.008, rtrange = NULL)
 }
 \arguments{
 \item{f}{ELU filename to read.}

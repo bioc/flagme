@@ -1,9 +1,9 @@
 #' exportSpectra
-#' 
+#'
 #' Write the mass spectum into a .msp file to be used in NIST search.
-#' 
+#'
 #' Write the mass spectum into a .msp file to be used in NIST search.
-#' 
+#'
 #' @param object an object of class "peaksDataset"
 #' @param outList an object created using the gatherInfo() function
 #' @param spectra numeric. The number of the mass spectra to be printed. It
@@ -13,7 +13,7 @@
 #' @return a .msp file
 #' @author riccardo.romoli@@unifi.com
 #' @export exportSpectra
-exportSpectra <- function (object, outList, spectra, normalize = TRUE) 
+exportSpectra <- function (object, outList, spectra, normalize = TRUE)
 {
     spectra <- as.numeric(spectra)
     mz <- outList[[spectra]]$mz
@@ -21,7 +21,7 @@ exportSpectra <- function (object, outList, spectra, normalize = TRUE)
     if(normalize)
     {
         for(i in 1:ncol(abu)){
-            if(is.na(sum(abu[, i]))) 
+            if(is.na(sum(abu[, i])))
                 next
             abu[, i] <- 100 * abu[, i]/abu[which.max(abu[, i]), i]
         }
@@ -33,11 +33,10 @@ exportSpectra <- function (object, outList, spectra, normalize = TRUE)
     idx <- 1
     spec <- paste(mz, abu[,idx])
     msp <- rbind(paste("NAME: Variable", spectra),
-                 paste("COMMENT:", round(object@peaksrt[[idx]][spectra], digits = 2), "min"), 
-                 paste("FORMULA:"), paste("MW:"), paste("CAS:"), paste("SYNONYM:"), 
+                 paste("COMMENT:", round(object@peaksrt[[idx]][spectra], digits = 2), "min"),
+                 paste("FORMULA:"), paste("MW:"), paste("CAS:"), paste("SYNONYM:"),
                  paste("Num Peaks:", length(spec)), matrix(unlist(spec), nrow = length(unlist(spec)), ncol = 1))
 
     write(msp, file = paste0(spectra,".msp"), sep = "\n")
-    
-}
 
+}

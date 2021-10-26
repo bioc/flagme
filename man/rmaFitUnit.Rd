@@ -4,8 +4,15 @@
 \alias{rmaFitUnit}
 \title{Fits a robust linear model (RLM) for one metabolite}
 \usage{
-rmaFitUnit(u, maxit = 5, mzEffect = TRUE, cls = NULL,
-  fitSample = TRUE, fitOrCoef = c("coef", "fit"), TRANSFORM = log2)
+rmaFitUnit(
+  u,
+  maxit = 5,
+  mzEffect = TRUE,
+  cls = NULL,
+  fitSample = TRUE,
+  fitOrCoef = c("coef", "fit"),
+  TRANSFORM = log2
+)
 }
 \arguments{
 \item{u}{a metabolite unit (list object with vectors \code{mz} and \code{rt}

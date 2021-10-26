@@ -4,8 +4,13 @@
 \alias{addChromaTOFPeaks}
 \title{Add ChromaTOF peak detection results}
 \usage{
-addChromaTOFPeaks(object, fns = dir(, "[Tt][Xx][Tx]"), rtDivide = 60,
-  verbose = TRUE, ...)
+addChromaTOFPeaks(
+  object,
+  fns = dir(, "[Tt][Xx][Tx]"),
+  rtDivide = 60,
+  verbose = TRUE,
+  ...
+)
 }
 \arguments{
 \item{object}{a \code{peaksDataset} object.}

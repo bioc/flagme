@@ -2,35 +2,57 @@
 % Please edit documentation in R/addXCMSPeaks.R
 \name{addXCMSPeaks}
 \alias{addXCMSPeaks}
-\title{Add xcms/CAMERA peak detection results}
+\title{addXCMSPeaks}
 \usage{
-addXCMSPeaks(files, object, peakPicking = c("cwt", "mF"),
-  perfwhm = 0.75, quick = TRUE, ...)
+addXCMSPeaks(
+  files,
+  object,
+  settings,
+  rtrange = NULL,
+  mzrange = NULL,
+  perfwhm = 0.75,
+  minintens = 100,
+  minfeat = 6,
+  multipleMatchedFilter = FALSE,
+  multipleMatchedFilterParam = list(fwhm = c(5, 10, 20), mz_abs = 0.1, rt_abs = 3)
+)
 }
 \arguments{
-\item{files}{character vector of same length as \code{object@rawdata} (user
-ensures the order matches)}
+\item{files}{list of chromatogram files}
 
-\item{object}{a \code{peaksDataset} object.}
+\item{object}{a \code{peakDataset} object}
 
-\item{peakPicking}{Methods to use for peak detection. See details.}
+\item{settings}{list. It conteins the settings for the peak-picking}
 
-\item{perfwhm}{percentage of full width half maximum. See
-CAMERA::groupFWHM() for more details}
+\item{rtrange}{vector; retention time range}
 
-\item{quick}{logical. See CAMERA::annotate() for more details}
+\item{mzrange}{vector, mz range}
 
-\item{...}{arguments passed on to \code{xcmsSet} and \code{annotate}}
+\item{perfwhm}{etermines the maximal retentiontime difference of features in
+one pseudospectrum.}
+
+\item{minintens}{minimum ion intensity to be included into a pseudospectra}
+
+\item{minfeat}{minimum number of ion to be created a pseudospectra}
+
+\item{multipleMatchedFilter}{logical Try to remove redundant peaks, in 
+this case where there are any peaks within an absolute m/z value of 0.2 and 
+within 3 s for any one sample in the xcmsSet (the largest peak is kept)}
+
+\item{multipleMatchedFilterParam}{list. It conteins the settings for the
+peak-picking. mz_abs represent the the mz range; rt_abs represent thert range}
 }
 \value{
 \code{peaksDataset} object
 }
 \description{
+Add xcms/CAMERA peak detection results
+}
+\details{
 Reads the raw data using xcms, group each extracted ion according to their
 retention time using CAMERA and attaches them to an already created
 \code{peaksDataset} object
-}
-\details{
+
 Repeated calls to xcmsSet and annotate to perform peak-picking and
 deconvolution. The peak detection results are added to the original
 \code{peaksDataset} object. Two peak detection alorithms are available:
@@ -39,18 +61,18 @@ approach (peakPicking=c('mF')) described by Smith et al (2006). For further
 information consult the xcms package manual.
 }
 \examples{
-
-# need access to CDF (raw data)
-require(gcspikelite)
-gcmsPath <- paste(find.package("gcspikelite"), "data", sep="/")
-
-# full paths to file names
-cdfFiles <- dir(gcmsPath, "CDF", full=TRUE)
-
-# create a 'peaksDataset' object and add XCMS peaks to it
-pd <- peaksDataset(cdfFiles[1], mz=seq(50,550), rtrange=c(7.5,8.5))
-pd <- addXCMSPeaks(cdfFiles[1], pd, peakPicking=c('mF'),
-                   snthresh=3, fwhm=4, step=1, steps=2, mzdiff=0.5)
+files <- list.files(path = paste(find.package("gcspikelite"), "data",
+                    sep = "/"),"CDF", full = TRUE)
+data <- peaksDataset(files[1:2], mz = seq(50, 550), rtrange = c(7.5, 8.5))
+## create settings object
+mfp <- xcms::MatchedFilterParam(fwhm = 10, snthresh = 5)
+cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
+ prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
+ extendLengthMSW = TRUE, mzCenterFun = "wMean")
+data <- addXCMSPeaks(files[1:2], data, settings = mfp, minintens = 100,
+ multipleMatchedFilter = FALSE, multipleMatchedFilterParam =
+ list(fwhm = c(5, 10, 20), rt_abs = 3, mz_abs = 0.1))
+data
 
 }
 \seealso{
