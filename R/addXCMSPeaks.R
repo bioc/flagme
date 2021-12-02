@@ -25,6 +25,8 @@
 #' within 3 s for any one sample in the xcmsSet (the largest peak is kept)
 #' @param multipleMatchedFilterParam list. It conteins the settings for the
 #' peak-picking. mz_abs represent the the mz range; rt_abs represent thert range
+#' @param BPPARAM a parameter class specifying if and how parallel processing 
+#' should be performed
 #' @importFrom xcms xcmsRaw xcmsSet
 #' @importFrom CAMERA annotate getpspectra
 #' @importFrom stats aggregate
@@ -56,7 +58,8 @@ addXCMSPeaks <- function(files, object, settings, rtrange = NULL,
                            mzrange = NULL, perfwhm = 0.75, minintens = 100,
                            minfeat = 6, multipleMatchedFilter = FALSE, 
                            multipleMatchedFilterParam = list(
-                               fwhm = c(5, 10, 20), mz_abs = 0.1, rt_abs = 3)
+                               fwhm = c(5, 10, 20), mz_abs = 0.1, rt_abs = 3),
+                           BPPARAM = bpparam()
                                ) {
     ## Rmpi tends to give many warnings that are not relevant to end
     ## users: this is an attempt to suppress this output
@@ -107,7 +110,7 @@ addXCMSPeaks <- function(files, object, settings, rtrange = NULL,
                              rt_abs = multipleMatchedFilterParam$rt_abs)
         }
     }
-    xset <- xcms::findChromPeaks(row, param = settings)
+    xset <- xcms::findChromPeaks(row, param = settings, BPPARAM = bpparam())
   cat("peakPicking Done \n")
     pdp <- xcms::PeakDensityParam(sampleGroups = seq(along = files), bw = 20,
         minFraction = 0.5)

@@ -14,7 +14,8 @@ addXCMSPeaks(
   minintens = 100,
   minfeat = 6,
   multipleMatchedFilter = FALSE,
-  multipleMatchedFilterParam = list(fwhm = c(5, 10, 20), mz_abs = 0.1, rt_abs = 3)
+  multipleMatchedFilterParam = list(fwhm = c(5, 10, 20), mz_abs = 0.1, rt_abs = 3),
+  BPPARAM = bpparam()
 )
 }
 \arguments{
@@ -41,6 +42,9 @@ within 3 s for any one sample in the xcmsSet (the largest peak is kept)}
 
 \item{multipleMatchedFilterParam}{list. It conteins the settings for the
 peak-picking. mz_abs represent the the mz range; rt_abs represent thert range}
+
+\item{BPPARAM}{a parameter class specifying if and how parallel processing 
+should be performed}
 }
 \value{
 \code{peaksDataset} object
