@@ -44,3 +44,7 @@ vignettes/*.pdf
 
 # README
 README.md
+
+# src compiled files
+src/*.o
+src/*.so
