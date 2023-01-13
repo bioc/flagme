@@ -16,8 +16,8 @@ importSpec <- function(file){
     ## loop to extract the mass spec into a list
     list.spec <- lapply(1:length(starts), function(z){
         ## meta data
-#        browser()
-        comp <- lib[starts[z]:ends[z]]
+        ## cat(z, "\n") # only for debug
+        comp <- lib[starts[z]:ends[z]] #
         numPeaks.idx <- which(regexpr("[Nn][Uu][Mm] [Pp][Ee][Aa][Kk][Ss]:", comp) == 1)
         metaData <- comp[1:numPeaks.idx - 1]
         md <- strsplit(metaData, split = ": ")
@@ -28,12 +28,15 @@ importSpec <- function(file){
         nlines <- length(comp)
         npeaks <- as.numeric(strsplit(comp[numPeaks.idx], ":")[[1]][2])
         peaks.idx <- (numPeaks.idx + 1):nlines
-        pks <- gsub("^ +", "", unlist(strsplit(comp[peaks.idx], ";")))
-        ## il separatore potrebbe essere anche (), va trovata una soluzione
-        pks.2 <- gsub("^ +", "", unlist(strsplit(comp[peaks.idx], "[()]")))
-gsub("\"", "", pks.2)
-
-        pks <- pks[pks != ""]
+        if (grepl("\\(|\\)", comp[peaks.idx][[1]][1]) == FALSE) {
+            cat("1")
+            pks <- gsub("^ +", "", unlist(strsplit(comp[peaks.idx], ";")))
+        } else {
+            cat("2")
+            pks <- gsub("^ +", "", unlist(strsplit(comp[peaks.idx], "[()]")))
+        }
+      ## gsub("\"", "", pks)
+      pks <- pks[pks != ""]
         if (length(pks) != npeaks)
         {
             stop("Not the right number of peaks in compound", metaData.list$NAME)

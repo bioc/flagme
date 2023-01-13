@@ -118,6 +118,12 @@ peaksDataset <- function(fns=dir(, "[Cc][Dd][Ff]"), verbose=TRUE,
     names(rawdata) <- names(rawrt) <- nm
     new("peaksDataset", rawdata=rawdata,
         rawrt=rawrt, mz=mz, files=fns)
+    ## new("peaksDataset",
+    ##   rawdata = lapply(rawdata, function(x){ as.matrix.csc(x) }),
+    ##   rawrt = rawrt,
+    ##   mz = mz,
+    ##   files = fns)
+
 }
 
 
