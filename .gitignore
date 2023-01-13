@@ -45,7 +45,13 @@ vignettes/*.pdf
 # README
 README.md
 
+<<<<<<< HEAD
 # 
 *.so
 *.o
 *.rds
+=======
+# src compiled files
+src/*.o
+src/*.so
+>>>>>>> 8de1926af9c10b780a6f12fe582b103c4c9d57a3
