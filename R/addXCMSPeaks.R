@@ -20,12 +20,12 @@
 #'     one pseudospectrum.
 #' @param minintens minimum ion intensity to be included into a pseudospectra
 #' @param minfeat minimum number of ion to be created a pseudospectra
-#' @param multipleMatchedFilter logical Try to remove redundant peaks, in 
-#' this case where there are any peaks within an absolute m/z value of 0.2 and 
+#' @param multipleMatchedFilter logical Try to remove redundant peaks, in
+#' this case where there are any peaks within an absolute m/z value of 0.2 and
 #' within 3 s for any one sample in the xcmsSet (the largest peak is kept)
 #' @param multipleMatchedFilterParam list. It conteins the settings for the
 #' peak-picking. mz_abs represent the the mz range; rt_abs represent thert range
-#' @param BPPARAM a parameter class specifying if and how parallel processing 
+#' @param BPPARAM a parameter class specifying if and how parallel processing
 #' should be performed
 #' @importFrom xcms xcmsRaw xcmsSet
 #' @importFrom CAMERA annotate getpspectra
@@ -54,9 +54,9 @@
 #' @importFrom CAMERA annotate getpspectra
 #' @importFrom stats aggregate
 #' @export addXCMSPeaks
-addXCMSPeaks <- function(files, object, settings, rtrange = NULL,
+addXCMSPeaks_cut <- function(files, object, settings, rtrange = NULL,
                            mzrange = NULL, perfwhm = 0.75, minintens = 100,
-                           minfeat = 6, multipleMatchedFilter = FALSE, 
+                           minfeat = 6, multipleMatchedFilter = FALSE,
                            multipleMatchedFilterParam = list(
                                fwhm = c(5, 10, 20), mz_abs = 0.1, rt_abs = 3),
                            BPPARAM = bpparam()
@@ -100,7 +100,7 @@ addXCMSPeaks <- function(files, object, settings, rtrange = NULL,
             set1c <- xcms::findChromPeaks(row, param = settings )
             set1 <- set1c
             xcms::chromPeaks(set1) <- rbind(
-                xcms::chromPeaks(set1a), xcms::chromPeaks(set1b), 
+                xcms::chromPeaks(set1a), xcms::chromPeaks(set1b),
                 xcms::chromPeaks(set1c)
             )
             xcms::chromPeaks(set1) <- xcms::chromPeaks(set1)[
@@ -237,7 +237,6 @@ addXCMSPeaks <- function(files, object, settings, rtrange = NULL,
         )
 }
 
-
 ##' Duplicate peak removal function
 ##'
 ##' Remove redundant peaks, in this case where there are any peaks within an
@@ -288,197 +287,6 @@ de_Duper <- function(object, mz_abs = 0.1, rt_abs = 2) {
     xcms::chromPeaks(object) <- peaks_mat_out
     return(object)
 }
-
-
-#### ---------------------------------------------------------------------------
-#### DEVEL
-#### ---------------------------------------------------------------------------
-#' Add xcms/CAMERA peak detection results
-#'
-#' Reads the raw data using xcms, group each extracted ion according to their
-#' retention time using CAMERA and attaches them to an already created
-#' \code{peaksDataset} object
-#'
-#' Repeated calls to xcmsSet and annotate to perform peak-picking and
-#' deconvolution. The peak detection results are added to the original
-#' \code{peaksDataset} object. Two peak detection alorithms are available:
-#' continuous wavelet transform (peakPicking=c('cwt')) and the matched filter
-#' approach (peakPicking=c('mF')) described by Smith et al (2006). For further
-#' information consult the xcms package manual.
-#' @title addXCMSPeaks
-#' @param files list of chromatogram files
-#' @param object a \code{peakDataset} object
-#' @param settings list. It conteins the settings for the peak-picking
-#' @param rtrange vector; retention time range
-#' @param mzrange vector, mz range
-#' @param perfwhm etermines the maximal retentiontime difference of features in
-#'     one pseudospectrum.
-#' @param minintens minimum ion intensity to be included into a pseudospectra
-#' @param minfeat minimum number of ion to be created a pseudospectra
-#' @importFrom xcms xcmsRaw xcmsSet
-#' @importFrom CAMERA annotate getpspectra
-#' @importFrom stats aggregate
-#' @export addXCMSPeaks
-#' @return \code{peaksDataset} object
-#' @author Riccardo Romoli \email{riccardo.romoli@@unifi.it}
-#' @seealso \code{\link{peaksDataset}} \code{\link{findPeaks.matchedFilter}}
-#' \code{\link{findPeaks.centWave}} \code{\link{xcmsRaw-class}}
-#' @keywords manip
-#' @examples
-#' files <- list.files(path = paste(find.package("gcspikelite"), "data",
-#'                                  sep = "/"),"CDF", full = TRUE)
-#' data <- peaksDataset(files[1:2], mz = seq(50, 500))
-#' ## create settings object
-#' mf <- list(method =  "matchedFilter", step =  0.5, steps =  2, mzdiff =  0.5,
-#'            fwhm = 8, snthresh =  2, max = 500,
-#'            BPPARAM = SnowParam(2, log = TRUE, stop.on.error = FALSE))
-#' cwt <- list(method = "centWave", ppm = 800, snthresh = 3,
-#'             mzCenterFun = "apex", peakwidth = c(3, 20),
-#'             prefilter = c(1, 500),fitgauss = FALSE,
-#'             firstBaselineCheck = FALSE,
-#'             BPPARAM = SnowParam(2, log = TRUE, stop.on.error = FALSE))
-#'
-#' d1 <- addXCMSPeaks2(files[1:2], data, settings = mf, minintens = 100)
-#'
-addXCMSPeaks2 <- function (files, object, settings, rtrange = NULL,
-                           mzrange = NULL, perfwhm = 0.75, minintens = 100,
-                           minfeat = 6)
-{
-    ## Rmpi tends to give many warnings that are not relevant to end
-    ## users: this is an attempt to suppress this output
-    owarn <- options("warn")
-    on.exit(options(warn = owarn$warn))
-    options(warn = -1)
-
-    ## if an rtrange is given, we first find out which scans correspond
-    ## to this and then use the scanRange argument of xcmsSet
-    if(!is.null(rtrange))
-    {
-        if(length(rtrange) != 2)
-        {
-            stop("Improper rtrange given!")
-        }
-
-        rtrange <- rtrange * 60  ## convert from minutes to seconds
-        xr <- xcms:::xcmsRaw(files[1])
-        ## range(profMz(xr)) # get mz range
-        scanRange <- c(max(1,
-                           which(xr@scantime > rtrange[1])[1],
-                           na.rm = TRUE),
-                       min(length(xr@scantime),
-                           which(xr@scantime > rtrange[2])[1] - 1,
-                           na.rm = TRUE))
-        allSettings <- c(list(files = files, scanrange = scanRange),
-                         settings)
-    }
-    else
-    {
-        allSettings <- c(list(files = files), settings)
-    }
-
-    ## peak-picking
-    xset <- do.call(xcmsSet, allSettings)
-    xset <- xcms:::group(xset, bw = 20, minfrac = 0.5, minsamp = 1, mzwid = 1, max = 50, sleep = 0)
-    ## xset <- xcms:::fillPeaks(xset) # error
-    if(!is.null(mzrange))
-    {
-        idx <-  (xset@peaks[,"mz"] > mzrange[1]) & (xset@peaks[,"mz"] < mzrange[2])
-        xset@peaks <- xset@peaks[idx,]
-    }
-    ## deconvolution; list of all the xset
-    ap <- split(xset, factor(sampnames(xset), levels = sampnames(xset)))
-    apd <-  lapply(ap, function(x)
-    {
-        xa <- CAMERA:::xsAnnotate(x,  sample = 1)
-        xa <- CAMERA:::groupFWHM(xa, perfwhm = perfwhm)
-    })
-    ## filter pseudo spectra
-    intensity <- "maxo"
-    res <- lapply(apd, function(x)
-    {
-        allpks <- x@groupInfo
-        ## intensity <- "maxo"
-        minI <- minintens# * max(allpks[, intensity])
-        tooSmall <- which(allpks[, intensity] < minI)
-        pspectra <- lapply(x@pspectra, function(x) {x[!x %in% tooSmall]})
-        npeaks <- sapply(pspectra, length)
-        pspectra <- pspectra[npeaks >= minfeat]
-        ## list of unique pspec, double masses removed
-        listpspec <- lapply(pspectra, function(x){
-            aa <- cbind(mz = round(allpks[x,"mz"], digits = 0),
-                        allpks[x, c(intensity, "rt", "rtmin", "rtmax")]
-                        )
-            double <- duplicated(aa[,1])
-            bb <- cbind(aggregate(aa[, 2], list(aa[,1]), FUN = sum),aa[!double,3:5])
-            setNames(bb, c(colnames(aa)))
-        }
-        )
-        ## get mzrange from data
-        mz.max <- max(sapply(listpspec, function(x){max(x[,"mz"])}))
-        mz.min <- min(sapply(listpspec, function(x){min(x[,"mz"])}))
-        mz.range <- data.frame(mz = c(mz.min:mz.max))
-        ## merge pspec with mzrange
-        listpspec.merged <- lapply(listpspec, function(x){
-            merge(x, mz.range, by = "mz", all = TRUE)
-        })
-    })
-    ## merge again with a common mz range among all sampless
-    max.mz <- max(sapply(res, function(x){max(sapply(x, "[[", "mz"))}))
-    min.mz <- min(sapply(res, function(x){min(sapply(x, "[[", "mz"))}))
-    mz.range.all <- data.frame(mz = c(min.mz:max.mz))
-    res.mz.mrg <- lapply(res, function(x){
-        lapply(x, function(y){
-            merge(y, mz.range.all, by = "mz", all = TRUE)
-        }
-        )
-    })
-    ## prepare the S4 slots
-    spec.ind <- lapply(res.mz.mrg, function(x){1:length(x)})
-    apex.rt <- lapply(res.mz.mrg, function(x){
-        rt <- lapply(x, "[[",  "rt")
-        round(sapply(rt, function(x){mean(x, na.rm = TRUE)/60}), digits = 3)
-
-    })
-    start.rt <- lapply(res.mz.mrg, function(x){
-        rt <- lapply(x, "[[",  "rtmin")
-        round(sapply(rt, function(x){mean(x, na.rm = TRUE)/60}), digits = 3)
-    })
-    stop.rt <- lapply(res.mz.mrg, function(x){
-        rt <- lapply(x, "[[",  "rtmax")
-        round(sapply(rt, function(x){mean(x, na.rm = TRUE)/60}), digits = 3)
-    })
-    data <- lapply(res.mz.mrg, function(x){
-        a <- lapply(x, "[[",  intensity)
-        aa <- do.call(cbind, a)
-        colnames(aa) <- c(1:ncol(aa))
-        aa[is.na(aa)] <- c(0)
-        return(aa)
-    })
-
-    for(i in 1:length(files))
-    {
-        ord <- order(apex.rt[[i]])
-        data[[i]] <- data[[i]][, ord]
-        apex.rt[[i]] <- apex.rt[[i]][ord]
-        spec.ind[[i]] <- spec.ind[[i]][ord]
-        start.rt[[i]] <- start.rt[[i]][ord]
-        stop.rt[[i]] <- stop.rt[[i]][ord]
-    }
-    new("peaksDataset",
-        files = files,
-        peaksdata = data,
-        peaksrt = apex.rt,
-        peaksind = spec.ind,
-        peaksind.start = start.rt,
-        peaksind.end = stop.rt,
-        rawdata = object@rawdata,
-        rawrt = object@rawrt,
-        mz = c(min.mz:max.mz)
-        )
-}
-
-
-
 
 ##' Duplicate peak removal function
 ##'
@@ -540,217 +348,221 @@ deDuper <- function(object, mz.abs = 0.1, rt.abs = 2)
 }
 
 
-#' Add xcms/CAMERA peak detection results
-#'
-#' Reads the raw data using xcms, group each extracted ion according to their
-#' retention time using CAMERA and attaches them to an already created
-#' \code{peaksDataset} object
-#'
-#' Repeated calls to xcmsSet and annotate to perform peak-picking and
-#' deconvolution. The peak detection results are added to the original
-#' \code{peaksDataset} object. Two peak detection alorithms are available:
-#' continuous wavelet transform (peakPicking=c('cwt')) and the matched filter
-#' approach (peakPicking=c('mF')) described by Smith et al (2006). For further
-#' information consult the xcms package manual.
-#'
-#' @param files character vector of same length as \code{object@rawdata} (user
-#' ensures the order matches)
-#' @param object a \code{peaksDataset} object.
-#' @param peakPicking Methods to use for peak detection. See details.
-#' @param perfwhm percentage of full width half maximum. See
-#' CAMERA::groupFWHM() for more details
-#' @param quick logical. See CAMERA::annotate() for more details
-#' @param ... arguments passed on to \code{xcmsSet} and \code{annotate}
-#' @return \code{peaksDataset} object
-#' @author Riccardo Romoli \email{riccardo.romoli@@unifi.it}
-#' @seealso \code{\link{peaksDataset}} \code{\link{findPeaks.matchedFilter}}
-#' \code{\link{findPeaks.centWave}} \code{\link{xcmsRaw-class}}
-#' @keywords manip
-#' @examples
-#'
-#' # need access to CDF (raw data)
-#' require(gcspikelite)
-#' gcmsPath <- paste(find.package("gcspikelite"), "data", sep="/")
-#'
-#' # full paths to file names
-#' cdfFiles <- dir(gcmsPath, "CDF", full=TRUE)
-#'
-#' # create a 'peaksDataset' object and add XCMS peaks to it
-#' pd <- peaksDataset(cdfFiles[1], mz=seq(50,550), rtrange=c(7.5,8.5))
-#' pd <- addXCMSPeaks(cdfFiles[1], pd, peakPicking=c('mF'),
-#'                    snthresh=3, fwhm=4, step=1, steps=2, mzdiff=0.5)
-#'
-#' @importFrom xcms xcmsRaw xcmsSet
-#' @importFrom CAMERA annotate getpspectra
-#' @importFrom stats aggregate
-#' @export addXCMSPeaks
-addXCMSPeaks <- function (files, object, peakPicking = c("cwt", "mF"),
-                          multipleMatchedFilter = FALSE, perfwhm = 0.75,
-                          quick = TRUE,
-                          multipleMatchedFilterParam = list(fwhm = c(5, 10, 15),
-                                                         mz.abs = 0.2, rt.abs = 2),
-                          ...)
-{
+
+##' Add xcms/CAMERA peak detection results
+##'
+##' Reads the raw data using xcms, group each extracted ion according to their
+##' retention time using CAMERA and attaches them to an already created
+##' \code{peaksDataset} object
+##'
+##' Repeated calls to xcmsSet and annotate to perform peak-picking and
+##' deconvolution. The peak detection results are added to the original
+##' \code{peaksDataset} object. Two peak detection alorithms are available:
+##' continuous wavelet transform (peakPicking=c('cwt')) and the matched filter
+##' approach (peakPicking=c('mF')) described by Smith et al (2006). For further
+##' information consult the xcms package manual.
+##' @title addXCMSPeaks
+##' @param files list of chromatogram files
+##' @param object a \code{peakDataset} object
+##' @param settings see \code{\link{{findChromPeaks-matchedFilter}}} and
+##' \code{\link{{findChromPeaks-centWave}}}
+##' @param minintens minimum ion intensity to be included into a pseudospectra
+##' @param minfeat minimum number of ion to be created a pseudospectra
+##' @param BPPARAM a parameter class specifying if and how parallel processing
+#' should be performed
+##' @param multipleMF logical Try to remove redundant peaks, in
+##' this case where there are any peaks within an absolute m/z value of 0.2 and
+##' within 3 s for any one sample in the xcmsSet (the largest peak is kept)
+##' @param multipleMFParam list. It conteins the settings for the
+##' peak-picking. mz_abs represent the the mz range; rt_abs represent thert range
+##' @param mz.abs mz range
+##' @param rt.abs rt range
+##' @return \code{peaksDataset} object
+##' @importFrom xcms xcmsRaw xcmsSet
+##' @importFrom CAMERA annotate getpspectra
+##' @importFrom stats aggregate
+##' @export addXCMSPeaks
+##' @author Riccardo Romoli \email{riccardo.romoli@unifi.it}
+##' @seealso \code{\link{peaksDataset}} \code{\link{findPeaks.matchedFilter}}
+##' \code{\link{findPeaks.centWave}} \code{\link{xcmsRaw-class}}
+##' @keywords manip
+##' @examples
+##' files <- list.files(path = paste(find.package("gcspikelite"), "data",
+##'                     sep = "/"),"CDF", full = TRUE)
+##' data <- peaksDataset(files[1:2], mz = seq(50, 550), rtrange = c(7.5, 8.5))
+##' ## create settings object
+##' mfp <- xcms::MatchedFilterParam(fwhm = 10, snthresh = 5)
+##' cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
+##'  prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
+##'  extendLengthMSW = TRUE, mzCenterFun = "wMean")
+##' data <- addXCMSPeaks(files[1:2], data, settings = mfp, minintens = 100,
+##'  multipleMatchedFilter = FALSE, multipleMatchedFilterParam =
+##'  list(fwhm = c(5, 10, 20), rt_abs = 3, mz_abs = 0.1))
+##' data
+addXCMSPeaks <- function (files, object, settings = list(), minintens = 100,
+                              minfeat = 6, BPPARAM = bpparam(),
+                              multipleMF = FALSE, multipleMFParam = list(
+                                                    fwhm = c(5, 10, 15),
+                                                    mz.abs = 0.2, rt.abs = 2)) {
     options(warn = -1)
     cdfFiles <- as.character(files)
     if (length(cdfFiles) != length(object@rawdata))
-        stop("Number of files must be the same as the number of runs (and must match).")
-    xs <- lapply(cdfFiles, function(x, y) {
-        f <- which(cdfFiles %in% x)
-        xr <- xcmsRaw(x)
-        rtrange <- c(min(object@rawrt[[f]]), max(object@rawrt[[f]])) * 60
-        scanRange <- c(max(1, which(xr@scantime > rtrange[1])[1], na.rm = TRUE),
-                       min(length(xr@scantime), which(xr@scantime > rtrange[2])[1] - 1, na.rm = TRUE))
-        if(peakPicking == "cwt")
-        {
-            s <- xcmsSet(x, method = "centWave", #prefilter = c(5, 100),
-                         scanrange = scanRange, integrate = 1, mzdiff = -0.001,
-                         #fitgauss = TRUE,
-                         ...)
-        }
-        if(peakPicking == "mF")
-        {
-            if(multipleMatchedFilter == FALSE)
-            {
-                s <- xcmsSet(x, method = "matchedFilter", scanrange = scanRange, max = 500, ...) # original
-            }
-            else
-            {## make 3 xcmsSet objects using 3 FWHM values keeping all else the same
-                set1a <- xcmsSet(x, method = "matchedFilter",
-                                 fwhm = multipleMatchedFilterParam$fwhm[1],
-                                 scanrange = scanRange, max = 500, ...)
-                set1b <- xcmsSet(x, method = "matchedFilter",
-                                 fwhm = multipleMatchedFilterParam$fwhm[2],
-                                 scanrange = scanRange, max = 500, ...)
-                set1c <- xcmsSet(x, method = "matchedFilter",
-                                 fwhm = multipleMatchedFilterParam$fwhm[3],
-                                 scanrange = scanRange, max = 500, ...)
-                ## combine into one xcmsSet by using one of the above as a template and
-                ## overriding its peaklist with a combination of all three
-                set1 <- set1c
-                set1@peaks <- rbind(set1a@peaks, set1b@peaks, set1c@peaks)
-                set1@peaks <- set1@peaks[order(set1@peaks[, "sample"], decreasing = FALSE), ]
-                ## remove redundant peaks, in this case where there are any peaks within an
-                ## absolute m/z value of 0.2 and within 3 s for any one sample in the xcmsSet
-                ## (the largest peak is kept)
-                s <- deDuper(set1,
-                             mz.abs = multipleMatchedFilterParam$mz.abs,
-                             rt.abs = multipleMatchedFilterParam$rt.abs)
-            }
+        stop("Number of files must be the same as the number of runs
+(and must match).")
+    if (class(settings)[1] == "CentWaveParam") {
+      all_settings <- list(files = files, method = "centWave",
+                           ppm = settings@ppm, peakwidth = settings@peakwidth,
+                           snthresh = settings@snthresh,
+                           prefilter = settings@prefilter,
+                           mzCenterFun = settings@mzCenterFun,
+                           integrate = settings@integrate,
+                           mzdiff = settings@mzdiff,
+                           fitgauss = settings@fitgauss, noise = settings@noise,
+                           firstBaselineCheck = settings@firstBaselineCheck,
+                           roiScales = settings@roiScales, BPPARAM = BPPARAM
+                           )
+      xs <- do.call(xcms:::xcmsSet, all_settings)
+    } else if (class(settings)[1] == "MatchedFilterParam" && multipleMF == FALSE) {
+      all_settings <- list(files = files, method = "matchedFilter",
+                           fwhm = settings@fwhm, BPPARAM = BPPARAM,
+                           sigma = settings@sigma, max = settings@max,
+                           snthresh = settings@snthresh, steps = settings@steps,
+                           mzdiff = settings@mzdiff, index = settings@index
+                           )
+      xs <- do.call(xcms:::xcmsSet, all_settings)
+    } else if (class(settings)[1] == "MatchedFilterParam" && multipleMF == TRUE) {
+      all_settings <- list(files = files, method = "matchedFilter",
+                           fwhm = settings@fwhm,
+                           sigma = settings@sigma, max = settings@max,
+                           snthresh = settings@snthresh, steps = settings@steps,
+                           mzdiff = settings@mzdiff, index = settings@index
+                           )
+      ## multipleMF
+      ## make 3 xcmsSet objects using 3 FWHM values keeping all else the same
+      all_settings$fwhm <- multipleMFParam$fwhm[1]
+      set1a <- do.call(xcms:::xcmsSet, all_settings)
+      all_settings$fwhm <- multipleMFParam$fwhm[2]
+      set1b <- do.call(xcms:::xcmsSet, all_settings)
+      all_settings$fwhm <- multipleMFParam$fwhm[3]
+      set1c <- do.call(xcms:::xcmsSet, all_settings)
+      ## combine into one xcmsSet by using one of the above as a template and
+      ## overriding its peaklist with a combination of all three
+      set1 <- set1c
+      set1@peaks <- rbind(set1a@peaks, set1b@peaks, set1c@peaks)
+      set1@peaks <- set1@peaks[order(set1@peaks[, "sample"], decreasing = FALSE), ]
+      ## remove redundant peaks, in this case where there are any peaks within an
+      ## absolute m/z value of 0.2 and within 3 s for any one sample in the xcmsSet
+      ## (the largest peak is kept)
+      xs <- deDuper(set1, mz.abs = multipleMFParam$mz.abs,
+                    rt.abs = multipleMFParam$rt.abs)
+    }
+    ## xs <- do.call(xcms:::xcmsSet, all_settings)
+    xs <- xcms:::group(xs, bw = 20, minfrac = 0.5, minsamp = 1, mzwid = 1,
+                       max = 500, sleep = 0)
+    xs <- xcms:::fillPeaks(xs)
 
-        }
-        idx <- which(s@peaks[, "mz"] > min(object@mz) & s@peaks[,
-            "mz"] < max(object@mz))
-        s@peaks <- s@peaks[idx, ]
-        if(quick == TRUE)
-        {
-            a <- annotate(s, perfwhm = perfwhm, quick = quick)
-        }
-        if(quick == FALSE)
-        {
-            a <- annotate(s, perfwhm = perfwhm, cor_eic_th = 0.8,
-                          pval = 0.05, graphMethod = "hcs",
-                          calcIso = FALSE, calcCiS = TRUE,
-                          calcCaS = FALSE)
-        }
-        return(a)
-    }, y = peakPicking)
-    if (peakPicking == "cwt") {
-        area <- c("intb")
+    ## if(!is.null(mzrange)) {
+    ##   idx <-  (xs@peaks[,"mz"] > mzrange[1]) & (xs@peaks[,"mz"] < mzrange[2])
+    ##   xs@peaks <- xs@peaks[idx,]
+    ## }
+
+    ## deconvolution; list of all the xset
+    ap <- split(xs, factor(sampnames(xs), levels = sampnames(xs)))
+    apd <-  lapply(ap, function(x) {
+      xa <- CAMERA:::xsAnnotate(x)
+      xa <- CAMERA:::groupFWHM(xa, perfwhm = 0.6)
+      xa <- CAMERA:::groupCorr(xa, cor_eic_th = 0.9, calcCiS = TRUE)
     }
-    if (peakPicking == "mF") {
-        area <- c("intf")
+    )
+
+    ## filter pseudo spectra
+    intensity <- "maxo"
+    res <- lapply(apd, function(x) {
+      allpks <- x@groupInfo
+      ## intensity <- "maxo"
+      minI <- minintens# * max(allpks[, intensity])
+      tooSmall <- which(allpks[, intensity] < minI)
+      pspectra <- lapply(x@pspectra, function(x) {x[!x %in% tooSmall]})
+      npeaks <- sapply(pspectra, length)
+      pspectra <- pspectra[npeaks >= minfeat]
+      ## list of unique pspec, double masses removed
+      listpspec <- lapply(pspectra, function(x) {
+        aa <- cbind(mz = round(allpks[x,"mz"], digits = 0),
+                    allpks[x, c(intensity, "rt", "rtmin", "rtmax")]
+                    )
+        double <- duplicated(aa[, 1])
+        bb <- cbind(aggregate(aa[, 2], list(aa[,1]), FUN = sum), aa[!double, 3:5])
+        setNames(bb, c(colnames(aa)))
+      }
+      )
+      ## get mzrange from data
+      mz.max <- max(sapply(listpspec, function(x) {max(x[, "mz"])}))
+      mz.min <- min(sapply(listpspec, function(x) {min(x[, "mz"])}))
+      mz.range <- data.frame(mz = c(mz.min:mz.max))
+      ## merge pspec with mzrange
+      listpspec.merged <- lapply(listpspec, function(x) {
+        merge(x, mz.range, by = "mz", all = TRUE)
+      }
+      )
     }
-    data <- lapply(seq(along = cdfFiles), function(x) {
-        filt <- sapply(xs[[x]]@pspectra, function(r) {
-            length(r)
-        })
-        spec.idx <- c(1:length(xs[[x]]@pspectra))[which(filt >= 6)]
-        mzrange <- object@mz
-        abu <- data.frame(matrix(0, nrow = length(mzrange), ncol = length(spec.idx)))
-        rownames(abu) <- mzrange
-        colnames(abu) <- spec.idx
-        mz <- data.frame(mz = mzrange)
-        abu <- sapply(spec.idx, function(z) {
-            spec <- getpspectra(xs[[x]], z)[, c("mz", area)]
-            spec[, "mz"] <- round(spec[, "mz"])
-            if (max(table(spec[, 1])) > 1) {
-                spec.noDouble <- cbind(aggregate(spec[, 2], list(spec[,1]),
-                                                 FUN = sum))
-                colnames(spec.noDouble) <- c("mz", area)
-                spec <- spec.noDouble
-            }
-            else {
-                spec
-            }
-            abu$z <- merge(spec, mz, by = "mz", all = TRUE)[,area]
-        })
-        colnames(abu) <- spec.idx
-        abu[is.na(abu)] <- c(0)
-        return(abu)
-    })
-    apex.rt <- lapply(seq(along = cdfFiles), function(x) {
-        filt <- sapply(xs[[x]]@pspectra, function(r) {
-            length(r)
-        })
-        spec.idx <- c(1:length(xs[[x]]@pspectra))[which(filt >=
-            6)]
-        apex.rt <- sapply(spec.idx, function(z) {
-            spec.rt <- getpspectra(xs[[x]], z)[, c("rt")]
-            rt <- round(mean(spec.rt)/60, digits = 3)
-        })
-        return(apex.rt)
-    })
-    spectra.ind <- lapply(seq(along = cdfFiles), function(x) {
-        filt <- sapply(xs[[x]]@pspectra, function(r) {
-            length(r)
-        })
-        spec.idx <- c(1:length(xs[[x]]@pspectra))[which(filt >=
-            6)]
-    })
-    ind.start <- lapply(seq(along = cdfFiles), function(x) {
-        filt <- sapply(xs[[x]]@pspectra, function(r) {
-            length(r)
-        })
-        spec.idx <- c(1:length(xs[[x]]@pspectra))[which(filt >=
-            6)]
-        rt.start <- sapply(spec.idx, function(z) {
-            spec.rt <- getpspectra(xs[[x]], z)[, c("rtmin")]
-            rt <- round(mean(spec.rt), digits = 3)
-        })
-        return(rt.start)
-    })
-    ind.stop <- lapply(seq(along = cdfFiles), function(x) {
-        filt <- sapply(xs[[x]]@pspectra, function(r) {
-            length(r)
-        })
-        spec.idx <- c(1:length(xs[[x]]@pspectra))[which(filt >=
-            6)]
-        rt.stop <- sapply(spec.idx, function(z) {
-            spec.rt <- getpspectra(xs[[x]], z)[, c("rtmax")]
-            rt <- round(mean(spec.rt), digits = 3)
-        })
-        return(rt.stop)
-    })
-    object@files
-    object@mz
+    )
+
+    ## merge again with a common mz range among all sampless
+    max.mz <- max(sapply(res, function(x) {max(sapply(x, "[[", "mz"))}))
+    min.mz <- min(sapply(res, function(x) {min(sapply(x, "[[", "mz"))}))
+    mz.range.all <- data.frame(mz = c(min.mz:max.mz))
+    res.mz.mrg <- lapply(res, function(x) {
+      lapply(x, function(y) {
+        merge(y, mz.range.all, by = "mz", all = TRUE)
+      }
+      )
+    }
+    )
+
+    ## prepare the S4 slots
+    spec.ind <- lapply(res.mz.mrg, function(x){1:length(x)})
+    apex.rt <- lapply(res.mz.mrg, function(x){
+      rt <- lapply(x, "[[", "rt")
+      round(sapply(rt, function(x) {mean(x, na.rm = TRUE) / 60}), digits = 3)
+    }
+    )
+    start.rt <- lapply(res.mz.mrg, function(x) {
+      rt <- lapply(x, "[[", "rtmin")
+      round(sapply(rt, function(x) {mean(x, na.rm = TRUE) / 60}), digits = 3)
+    }
+    )
+    stop.rt <- lapply(res.mz.mrg, function(x) {
+      rt <- lapply(x, "[[", "rtmax")
+      round(sapply(rt, function(x) {mean(x, na.rm = TRUE) / 60}), digits = 3)
+    }
+    )
+    data <- lapply(res.mz.mrg, function(x) {
+      a <- lapply(x, "[[", intensity)
+      aa <- do.call(cbind, a)
+      colnames(aa) <- c(1:ncol(aa))
+      aa[is.na(aa)] <- c(0)
+      return(aa)
+    }
+    )
+
     for (i in 1:length(files)) {
-        ord <- order(apex.rt[[i]])
-        data[[i]] <- data[[i]][, ord]
-        apex.rt[[i]] <- apex.rt[[i]][ord]
-        spectra.ind[[i]] <- spectra.ind[[i]][ord]
-        ind.start[[i]] <- ind.start[[i]][ord]
-        ind.stop[[i]] <- ind.stop[[i]][ord]
+      ord <- order(apex.rt[[i]])
+      data[[i]] <- data[[i]][, ord]
+      apex.rt[[i]] <- apex.rt[[i]][ord]
+      spec.ind[[i]] <- spec.ind[[i]][ord]
+      start.rt[[i]] <- start.rt[[i]][ord]
+      stop.rt[[i]] <- stop.rt[[i]][ord]
     }
-    options(warn = 0)
-    nm <- lapply(files, function(u) {
-        sp <- strsplit(u, split = "/")[[1]]
-        sp[length(sp)]
-    })
-    nm <- sub(".CDF$", "", nm)
-    names(data) <- names(apex.rt) <- names(spectra.ind) <- names(ind.start) <- names(ind.stop) <- nm
-    new("peaksDataset", files = object@files, peaksdata = data,
-        peaksrt = apex.rt, peaksind = spectra.ind, peaksind.start = ind.start,
-        peaksind.end = ind.stop, rawdata = object@rawdata, rawrt = object@rawrt,
-        mz = object@mz)
+
+    new("peaksDataset",
+        files = files,
+        peaksdata = data,
+        peaksrt = apex.rt,
+        peaksind = spec.ind,
+        peaksind.start = start.rt,
+        peaksind.end = stop.rt,
+        rawdata = object@rawdata,
+        rawrt = object@rawrt,
+        mz = c(min.mz:max.mz)
+        )
 }
