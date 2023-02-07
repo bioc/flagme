@@ -11,7 +11,7 @@
 
 \item{verbose}{logical}
 
-\item{...}{}
+\item{...}{further}
 }
 \description{
 Compression method for peaksAlignment object
