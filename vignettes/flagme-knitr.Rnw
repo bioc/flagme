@@ -106,14 +106,8 @@ already created \texttt{peaksDataset} object:
 
 <<addXCMS>>=
 pd.2 <- peaksDataset(cdfFiles[1:3], mz = seq(50, 550), rtrange = c(7.5, 8.5))
-cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
-  prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
-  extendLengthMSW = TRUE, mzCenterFun = "wMean")
 mfp <- xcms::MatchedFilterParam(fwhm = 10, snthresh = 5)
-pd.2 <- addXCMSPeaks(cdfFiles[1:3], pd.2, settings = mfp, minintens = 100,
-  multipleMatchedFilter = FALSE, multipleMatchedFilterParam = 
-  list(fwhm = c(5, 10, 20), rt_abs = 2, mz_abs = 0.1)
-  )
+pd.2 <- addXCMSPeaks(cdfFiles[1:3], pd.2, settings = mfp)
 pd.2
 @ 
 

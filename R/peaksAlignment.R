@@ -3,7 +3,7 @@
 ##' Compression method for peaksAlignment object
 ##' @param object peaksAlignment
 ##' @param verbose logical
-##' @param ... 
+##' @param ... further
 ##' @author MR
 ##' @import methods
 ##' @importFrom methods setMethod new
@@ -22,7 +22,7 @@ setMethod("compress","peaksAlignment",
               #if (verbose) {
               #  after<-sum(ll(object)$KB)
               #  cat("[compress.peaksAlignment] Object is",(before-after),"KB
-              #  smaller.\n") 
+              #  smaller.\n")
               #}
               object@compressed <- TRUE
               new("peaksAlignment", object)
@@ -146,9 +146,7 @@ setMethod("show","peaksAlignment",
 #' cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
 #'  prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
 #'  extendLengthMSW = TRUE, mzCenterFun = "wMean")
-#' data <- addXCMSPeaks(files[1:2], data, settings = mfp, minintens = 100,
-#'  multipleMatchedFilter = FALSE, multipleMatchedFilterParam =
-#'  list(fwhm = c(5, 10, 20), rt_abs = 3, mz_abs = 0.1))
+#' data <- addXCMSPeaks(files[1:2], data, settings = mfp)
 #' data
 #' plotChrom(data, rtrange=c(7.5, 10.5), runs=c(1:2))
 #' 
@@ -277,9 +275,7 @@ peaksAlignment <- function(d1, d2, t1, t2, gap = 0.5, D = 50,
 #' cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
 #'  prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
 #'  extendLengthMSW = TRUE, mzCenterFun = "wMean")
-#' data <- addXCMSPeaks(files[1:2], data, settings = mfp, minintens = 100,
-#'  multipleMatchedFilter = FALSE, multipleMatchedFilterParam =
-#'  list(fwhm = c(5, 10, 20), rt_abs = 3, mz_abs = 0.1))
+#' data <- addXCMSPeaks(files[1:2], data, settings = mfp)
 #' data
 #' ## image plot
 #' plotChrom(data, rtrange = c(7.5,8.5), plotPeaks = TRUE, plotPeakLabels =TRUE)

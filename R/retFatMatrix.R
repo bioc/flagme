@@ -27,9 +27,7 @@
 #' cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
 #'  prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
 #'  extendLengthMSW = TRUE, mzCenterFun = "wMean")
-#' data <- addXCMSPeaks(files[1:2], data, settings = mfp, minintens = 100,
-#'  multipleMatchedFilter = FALSE, multipleMatchedFilterParam =
-#'  list(fwhm = c(5, 10, 20), rt_abs = 3, mz_abs = 0.1))
+#' data <- addXCMSPeaks(files[1:2], data, settings = mfp)
 #' data
 #' ma <- multipleAlignment(pd = data, group = c(1,1),
 #'                         filterMin = 1, metric = 2, type = 2)

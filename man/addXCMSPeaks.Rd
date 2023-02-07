@@ -7,15 +7,12 @@
 addXCMSPeaks(
   files,
   object,
-  settings,
-  rtrange = NULL,
-  mzrange = NULL,
-  perfwhm = 0.75,
+  settings = list(),
   minintens = 100,
   minfeat = 6,
-  multipleMatchedFilter = FALSE,
-  multipleMatchedFilterParam = list(fwhm = c(5, 10, 20), mz_abs = 0.1, rt_abs = 3),
-  BPPARAM = bpparam()
+  BPPARAM = bpparam(),
+  multipleMF = FALSE,
+  multipleMFParam = list(fwhm = c(5, 10, 15), mz.abs = 0.2, rt.abs = 2)
 )
 }
 \arguments{
@@ -23,28 +20,26 @@ addXCMSPeaks(
 
 \item{object}{a \code{peakDataset} object}
 
-\item{settings}{list. It conteins the settings for the peak-picking}
-
-\item{rtrange}{vector; retention time range}
-
-\item{mzrange}{vector, mz range}
-
-\item{perfwhm}{etermines the maximal retentiontime difference of features in
-one pseudospectrum.}
+\item{settings}{see \code{\link[xcms]{findPeaks-matchedFilter}}
+\code{\link[xcms]{findPeaks-centWave}}}
 
 \item{minintens}{minimum ion intensity to be included into a pseudospectra}
 
 \item{minfeat}{minimum number of ion to be created a pseudospectra}
 
-\item{multipleMatchedFilter}{logical Try to remove redundant peaks, in 
-this case where there are any peaks within an absolute m/z value of 0.2 and 
+\item{BPPARAM}{a parameter class specifying if and how parallel processing
+should be performed}
+
+\item{multipleMF}{logical Try to remove redundant peaks, in
+this case where there are any peaks within an absolute m/z value of 0.2 and
 within 3 s for any one sample in the xcmsSet (the largest peak is kept)}
 
-\item{multipleMatchedFilterParam}{list. It conteins the settings for the
+\item{multipleMFParam}{list. It conteins the settings for the
 peak-picking. mz_abs represent the the mz range; rt_abs represent thert range}
 
-\item{BPPARAM}{a parameter class specifying if and how parallel processing 
-should be performed}
+\item{mz.abs}{mz range}
+
+\item{rt.abs}{rt range}
 }
 \value{
 \code{peaksDataset} object
@@ -70,18 +65,13 @@ files <- list.files(path = paste(find.package("gcspikelite"), "data",
 data <- peaksDataset(files[1:2], mz = seq(50, 550), rtrange = c(7.5, 8.5))
 ## create settings object
 mfp <- xcms::MatchedFilterParam(fwhm = 10, snthresh = 5)
-cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
- prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
- extendLengthMSW = TRUE, mzCenterFun = "wMean")
-data <- addXCMSPeaks(files[1:2], data, settings = mfp, minintens = 100,
- multipleMatchedFilter = FALSE, multipleMatchedFilterParam =
- list(fwhm = c(5, 10, 20), rt_abs = 3, mz_abs = 0.1))
+cwt <- xcms::CentWaveParam()
+data <- addXCMSPeaks(files[1:2], data, settings = mfp, multipleMF = FALSE)
 data
-
 }
 \seealso{
-\code{\link{peaksDataset}} \code{\link{findPeaks.matchedFilter}}
-\code{\link{findPeaks.centWave}} \code{\link{xcmsRaw-class}}
+\code{\link[xcms]{peaksDataset}} \code{\link[xcms]{findPeaks-matchedFilter}}
+\code{\link[xcms]{findPeaks-centWave}} \code{\link[xcms]{xcmsRaw-class}}
 }
 \author{
 Riccardo Romoli \email{riccardo.romoli@unifi.it}

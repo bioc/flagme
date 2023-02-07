@@ -49,3 +49,5 @@ README.md
 src/*.o
 src/*.so
 src/*.rds
+
+.projectile

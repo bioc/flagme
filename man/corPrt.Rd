@@ -40,12 +40,8 @@ files <- list.files(path = paste(find.package("gcspikelite"), "data",
 data <- peaksDataset(files[1:2], mz = seq(50, 550), rtrange = c(7.5, 8.5))
 ## create settings object
 mfp <- xcms::MatchedFilterParam(fwhm = 10, snthresh = 5)
-cwt <- xcms::CentWaveParam(snthresh = 3, ppm = 3000, peakwidth = c(3, 40),
- prefilter = c(3, 100), fitgauss = FALSE, integrate = 2, noise = 0,
- extendLengthMSW = TRUE, mzCenterFun = "wMean")
-data <- addXCMSPeaks(files[1:2], data, settings = mfp, minintens = 100,
- multipleMatchedFilter = FALSE, multipleMatchedFilterParam =
- list(fwhm = c(5, 10, 20), rt_abs = 3, mz_abs = 0.1))
+cwt <- xcms::CentWaveParam()
+data <- addXCMSPeaks(files[1:2], data, settings = mfp, multipleMF = FALSE)
 data
 ## review peak picking
 plotChrom(data, rtrange=c(7.5, 10.5), runs=c(1:2))
